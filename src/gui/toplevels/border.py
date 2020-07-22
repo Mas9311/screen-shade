@@ -55,7 +55,7 @@ class BorderMonitor:
     def left_click(self, cardinal):
         if self.app.arg('verbose') > 2:
             print(f'\n{" " * 2}> The {cardinal.strip()} border on monitor {self.name} was clicked.')
-        self.app.config_menu_open()
+        self.app.menuconfig_open()
 
     def update_geometries(self):
         if self.name in self.app.config('border', w=self.app.get_class('ExcludedManager')):

@@ -171,7 +171,23 @@ class App:
         print('All widgets created. Checking for hidden widgets')
         self._widgets[ScreenManager].check_for_hidden_screens()
 
-    def config_menu_open(self, mouse=True):
+    def get_max_screen_dimensions(self):
+        return pyautogui.size()
+
+    def get_mouse_coords(self, mouse_refresh=True, oob=True):
+        if mouse_refresh:
+            self.refresh_mouse_xy(oob)
+        return self._mouse_x, self._mouse_y
+
+    def get_monitor_index(self):
+        curr_x, curr_y = pyautogui.position()
+        for index, monitor in enumerate(self.monitors):
+            if monitor['min_x'] <= curr_x <= monitor['max_x']:
+                if monitor['min_y'] <= curr_y <= monitor['max_y']:
+                    return index
+        return -1
+
+    def menuconfig_open(self, mouse=True):
         if MenuConfig in self._widgets:
             print('* Configuration Menu is already open.')
             return
@@ -185,7 +201,7 @@ class App:
 
         self.update_monitor_focused()
 
-    def configmenu_close(self, destroyed=False, recreate=False):
+    def menuconfig_close(self, destroyed=False, recreate=False):
         """Destroying the MenuConfig widget takes a long time, so
         First:   save it as a local variable,
         Then:    delete the key from the dict (which allows it to be recreated before ``fully`` destroying),
@@ -208,23 +224,7 @@ class App:
                 configmenu.destroy()  # destroy the main Toplevel::MenuConfig widget itself (gray colored)
 
             if recreate:
-                self.config_menu_open(mouse=False)
-
-    def get_max_screen_dimensions(self):
-        return pyautogui.size()
-
-    def get_mouse_coords(self, mouse_refresh=True, oob=True):
-        if mouse_refresh:
-            self.refresh_mouse_xy(oob)
-        return self._mouse_x, self._mouse_y
-
-    def get_monitor_index(self):
-        curr_x, curr_y = pyautogui.position()
-        for index, monitor in enumerate(self.monitors):
-            if monitor['min_x'] <= curr_x <= monitor['max_x']:
-                if monitor['min_y'] <= curr_y <= monitor['max_y']:
-                    return index
-        return -1
+                self.menuconfig_open(mouse=False)
 
     def move_mouse_to_config_menu(self):
         """Moves mouse to center of MenuConfig's Titlebar widget."""

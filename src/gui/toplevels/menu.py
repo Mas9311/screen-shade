@@ -305,17 +305,21 @@ class MenuConfig(Toplevel):
         for curr_class, curr_class_dict in self.widgets_create_dict.items():
             for sub_key, curr_dict in curr_class_dict.items():
                 # if curr_dict['type'] == 'scale':
-                curr_var = self.variables[curr_class][sub_key]
                 try:
-                    curr_var.trace_vdelete('w', curr_var.trace_id)
-                except TclError as err:
-                    print(f'{"@" * 3}- Could not trace_vdelete {curr_var}.\n'
-                          f'{"@" * 3}  No trace_id: {err}.')
+                    curr_var = self.variables[curr_class][sub_key]
+                    try:
+                        curr_var.trace_vdelete('w', curr_var.trace_id)
+                    except TclError as err:
+                        print(f'{"@" * 3}- Could not trace_vdelete {curr_var}.\n'
+                              f'{"@" * 3}  No trace_id: {err}.')
+                except KeyError as err:
+                    if self.app.arg('verbose') > 2:
+                        print(err)
         for widget in self.winfo_children():
             widget.forget()
             widget.destroy()
 
-        self.app.configmenu_close(destroyed=True)
+        self.app.menuconfig_close(destroyed=True)
 
     def update_value_label(self, name, *_):
         keys = name.split(sep=' ')
