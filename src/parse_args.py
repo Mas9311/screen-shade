@@ -1,7 +1,6 @@
-from argparse import ArgumentParser, RawTextHelpFormatter, SUPPRESS
-import platform
-import time
+import argparse
 from src.defaults import DEFAULT_ARGUMENTS
+from src.helpers.os_helpers import init_command
 
 
 def retrieve_parameters():
@@ -10,7 +9,7 @@ def retrieve_parameters():
     If an unknown argument is passed, print the --help screen and halt execution."""
     default = DEFAULT_ARGUMENTS
 
-    usage_str = py_cmd('[options]') + ' ' * 39 + '┃\n\n'
+    usage_str = init_command('[options]') + ' ' * 39 + '┃\n\n'
     cmd_description = (
         '         ╔═════════════════════════════════════════════════════╗         ┃\n'
         '         ║ Monitor overlay to lighten or darken monitor output ║         ┃\n'
@@ -27,10 +26,10 @@ def retrieve_parameters():
         '        ☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐           ')
 
     # noinspection PyTypeChecker
-    parser = ArgumentParser(add_help=False,
-                            description=cmd_description,
-                            formatter_class=RawTextHelpFormatter,
-                            usage=usage_str)
+    parser = argparse.ArgumentParser(add_help=False,
+                                     description=cmd_description,
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     usage=usage_str)
 
     parser.add_argument('-d', '--demo',
                         action='store_true',
@@ -56,7 +55,7 @@ def retrieve_parameters():
 
     parser.add_argument('-h', '--help',
                         action='help',
-                        default=SUPPRESS,
+                        default=argparse.SUPPRESS,
                         help='HELP message (this) is displayed, and exits.' + ' ' * 15 + '┃')
 
     known_args, unknown_args = parser.parse_known_args()
@@ -70,6 +69,7 @@ def retrieve_parameters():
               f' > Unknown arguments detected: {str(unknown_args)}\n'
               f' > invoking --help\n')
         parser.print_help()  # prints help message
+        import time
         time.sleep(0.25)  # pause execution just long enough for help to display
         parser.parse_args()  # prints error message and halts the execution
 
@@ -81,14 +81,3 @@ def retrieve_parameters():
     }
 
     return arg_dict
-
-
-def py_cmd(additional=''):
-    windows_os = platform.system() == 'Windows'
-    cmd = ('python3', 'python.exe')[windows_os] + ' run.py'
-    if additional:
-        additional.strip()
-        num_spaces = (3, 0)[windows_os]
-        spaces = ' ' * num_spaces
-        cmd += ' ' + additional + spaces
-    return cmd
