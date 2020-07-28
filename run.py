@@ -6,10 +6,7 @@ from sys import platform
 
 if __name__ == '__main__':
     # TODO: implement parse_args.py
-    arg_dict = {
-        'verbose': 0,
-        'demo': False
-    }
+    arg_dict = retrieve_parameters()
 
     if platform in ['win32', 'cygwin']:
         # OS is Windows
