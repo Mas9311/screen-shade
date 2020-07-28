@@ -34,3 +34,8 @@ DEFAULT_CONFIGURATIONS = {
         'px_radius': PX_RADIUS,
     },
 }
+
+DEFAULT_ARGUMENTS = {
+    'verbose': 0,
+    'demo': False,
+}
