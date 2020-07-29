@@ -13,6 +13,7 @@ def get_menu_format(menu_manager):
                         'type': 'dropdown',
                         'var_type': 'StringVar',
                         'description': 'Open File',
+                        'from': 'data_dir'
                     },
                 }
             },

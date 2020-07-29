@@ -101,6 +101,7 @@ class App:
 
     def arg(self, key, **kwargs):
         """Modifies or Retrieves the executable arguments' dictionary, ``arg_dict``"""
+        print('Arg:', key)
         if 'set' not in kwargs:
             # This method is a used as a getter(), Return the value stored in `execution's arguments` dict
             return self._arg_dict[key]
@@ -111,12 +112,14 @@ class App:
         """Modifies or Retrieves the class variable, ``config_dict``.
         depending on if the kwarg['set'] is included.
         Note: this method MUST be called with the kwarg['w'] (the ``widget class`` requested)."""
+        print(f'Config: {list(args)} {kwargs}')
         if 'w' not in kwargs:
             print(f'\n\n\n{"@" * 3}- Called app._config_dict without a widget, ``w``. Examples:\n'
                   f'\tself.app.config(\'alpha\', w=ScreenManager)'
                   f'\tself.app.config(\'color\', \'border\', w=MenuConfig, set=\'#00FF00\')\n\n\n')
             sys.exit()
-        args = [_ for _ in args]  # transform (tuple) into [list]
+        # args_ = [_ for _ in args]  # transform (tuple) into [list]
+        args = list(args)  # transform (tuple) into [list]
         class_ = kwargs['w']
         last_key = args.pop(-1)
 
@@ -136,12 +139,6 @@ class App:
         else:
             # gets the value stored and return it.
             return pointer[last_key]
-
-    def class_list_str(self) -> list:
-        return self.class_helper.class_list_str()
-
-    def class_list(self) -> list:
-        return self.class_helper.class_list()
 
     def get_class(self, class_str):
         return self.class_helper.get_class(class_str)
@@ -291,7 +288,11 @@ class ClassHelper:
         self.app = master
         self.__name = __name
 
-    def class_list_str(self) -> list:
+        self._map_dict = {}
+        self.__update_class_str_list()
+        self.__update_class_list()
+
+    def __update_class_str_list(self) -> None:
         output = []
         for curr in dir(sys.modules[self.__name]):
             if curr == 'App':
@@ -299,18 +300,24 @@ class ClassHelper:
             if curr[0] == '_':
                 break
             output += [curr]
-        # print(output)
-        return output
 
-    def class_list(self) -> list:
-        output = [getattr(sys.modules[self.__name], f'{class_str}') for class_str in self.class_list_str()]
-        # print(output)
-        return output
+        if self.app.arg('verbose'):
+            print(f'[{self.__class__.__name__}] classes_str_list:\n'
+                  f' > {output}')
+
+        self._class_str_list = output
+
+    def __update_class_list(self) -> None:
+        output = []
+        for class_str in self._class_str_list:
+            class_ = getattr(sys.modules[self.__name], f'{class_str}')
+            output += [class_]
+            self._map_dict[class_str] = class_
+        self._class_list = output
 
     def get_class(self, class_str):
-        for curr_class in self.class_list():
-            # print(f'Does {class_str} == {curr_class.__name__}? {class_str == curr_class.__name__}')
-            if curr_class.__name__ == class_str:
-                return curr_class
-        print(f'Error: class `{class_str}` not found in list of classes.')
-        sys.exit()
+        try:
+            return self._map_dict[class_str]
+        except KeyError:
+            print(f'Error: class `{class_str}` not found in list of classes.')
+            sys.exit()
