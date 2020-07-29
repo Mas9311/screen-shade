@@ -8,6 +8,7 @@ import sys
 from src.gui.managers.border import BorderManager
 from src.gui.managers.demo import DemoManager
 from src.gui.managers.excluded import ExcludedManager
+from src.gui.managers.file import FileManager
 from src.gui.toplevels.menu import MenuConfig
 from src.gui.managers.screen import ScreenManager
 from src.helpers.file_helper import import_configurations, export_to_file
@@ -214,17 +215,20 @@ class App:
             print(f'{" " * 3}> Closing MenuConfig.\n'
                   f'{" " * 5}- widgets[MenuConfig] exists? {MenuConfig in self._widgets}')
         if MenuConfig in self._widgets.keys():
-            configmenu = self._widgets[MenuConfig]
-            configmenu.configure(background='#000000')
+            menu_widget = self._widgets[MenuConfig]
+            menu_widget.configure(background='#000000')
             del self._widgets[MenuConfig]
+            # self._widgets.pop(MenuConfig, None)
 
-            configmenu.geometry('100x100+0+0')
+            menu_widget.geometry('100x100+0+0')
             if not destroyed:
-                configmenu.destroy_()
-                configmenu.destroy()  # destroy the main Toplevel::MenuConfig widget itself (gray colored)
+                menu_widget.destroy_()
+            menu_widget.destroy()  # destroy the main Toplevel::MenuConfig widget itself (gray colored)
 
             if recreate:
                 self.menuconfig_open(mouse=False)
+            if self.arg('verbose'):
+                print(end='\n')
 
     def move_mouse_to_config_menu(self):
         """Moves mouse to center of MenuConfig's Titlebar widget."""
@@ -251,7 +255,8 @@ class App:
         self._widgets[ScreenManager].update_screen_areas()  # update the geometry of the areas covering the screen
 
         # self.root.update_idletasks()
-        # time.sleep(.0017)
+        # import time
+        # time.sleep(0.0017)
         self._mouse_in_motion = False
 
     def refresh_mouse_xy(self, oob=True):
@@ -287,7 +292,13 @@ class ClassHelper:
         self.__name = __name
 
     def class_list_str(self) -> list:
-        output = dir(sys.modules[self.__name])[1:7]
+        output = []
+        for curr in dir(sys.modules[self.__name]):
+            if curr == 'App':
+                continue
+            if curr[0] == '_':
+                break
+            output += [curr]
         # print(output)
         return output
 

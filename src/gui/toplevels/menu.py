@@ -1,7 +1,9 @@
 from tkinter import *
 # from tkinter import font
 
-from src.gui.frames.titlebar import Titlebar
+from src.gui.frames.menu.tab_bar import TabBar
+from src.gui.frames.title_bar import Titlebar
+from src.helpers.menu_format import get_menu_format
 
 
 class MenuConfig(Toplevel):
@@ -25,79 +27,7 @@ class MenuConfig(Toplevel):
         # self.bind('<Enter>', self.mouse_hover_enter)
         # self.bind('<Leave>', self.mouse_hover_leave)
 
-        self.widgets_create_dict = {
-            self.app.get_class('ScreenManager'): {
-                'alpha': {
-                    'type': 'scale',
-                    'var_type': 'DoubleVar',
-                    'description': 'Screen Transparency',
-                    'from': 0,
-                    'to': 0.975,
-                    'resolution': 0.001,
-                    'storage': 'config',
-                },
-                'color': {
-                    'type': 'radiobutton',
-                    'var_type': 'StringVar',
-                    'description': 'Screen Color',
-                    'options': [
-                        ('White', '#FFFFFF'),
-                        ('Gray4', '#404040'),
-                        ('Black', '#000000'),
-                        ('Sepia', '#704214'),
-                        ('Brown', '#643B0F'),
-                        # ('', '#'),
-                        # ('', '#'),
-                        # ('', '#'),
-                        ('DBlue', '#00172E'),
-                    ],
-                    'per_row': 3,
-                    'storage': 'config',
-                },
-                'px_radius': {
-                    'type': 'scale',
-                    'var_type': 'IntVar',
-                    'description': 'Mouse Radius',
-                    'from': 1,
-                    'to': 100,
-                    'resolution': 1,
-                    'storage': 'config',
-                }
-            },
-            self.app.get_class('BorderManager'): {
-                'px_radius': {
-                    'type': 'scale',
-                    'var_type': 'IntVar',
-                    'description': 'Border Radius',
-                    'from': 1,
-                    'to': 50,
-                    'resolution': 1,
-                    'storage': 'config',
-                }
-            },
-            self.app.get_class('ExcludedManager'): {
-                'screen': {
-                    'type': 'canvas_screen',
-                    'var_type': 'StringVar',
-                    'description': 'Hidden Screens',
-                    'monitors': self.app.monitors,
-                    'storage': 'config',
-                }
-            },
-            self.app.get_class('DemoManager'): {
-                'demo': {
-                    'type': 'radiobutton',
-                    'var_type': 'BooleanVar',
-                    'description': 'Demo',
-                    'options': [
-                        ('On ', True),
-                        ('Off', False)
-                    ],
-                    'per_row': 2,
-                    'storage': 'arg',  # stored in ``self.app._arg_dict`` accessible with self.app.arg() method
-                }
-            },
-        }
+        self.tab_create_list = get_menu_format(self)
         self.internal_observer_names = []
 
     def __create_widgets(self):
@@ -108,35 +38,43 @@ class MenuConfig(Toplevel):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
-        self._create_titlebar()  # creates the top-most border containing the window manager buttons {−, +, ×}
-        self._create_main_frame()  # creates the Frame to hold the bulk of the MenuConfig, i.e. Scales, Buttons, etc.
+        self._create_titlebar(0)  # creates the top-most border containing the window manager buttons {−, +, ×}
+        self._create_tab_bar(1)
+        self._create_main_frame(2)  # creates the Frame to hold the bulk of the MenuConfig, i.e. Scales, Buttons, etc.
 
         self.row_index = 0
-        for curr_class, curr_class_dict in self.widgets_create_dict.items():
-            self.widgets[curr_class] = dict()
-            self.variables[curr_class] = dict()
-            for sub_key, curr_dict in curr_class_dict.items():
-                self.widgets[curr_class][sub_key] = dict()
-                self._create_widget_description(curr_class, curr_dict)
-                getattr(self, f'_create_widget_{curr_dict["type"]}')(curr_class, sub_key, curr_dict)
+        for curr_tab in self.tab_create_list:
+            for curr_class, curr_class_dict in curr_tab['data'].items():
+                self.widgets[curr_class] = dict()
+                self.variables[curr_class] = dict()
+                for sub_key, curr_dict in curr_class_dict.items():
+                    self.widgets[curr_class][sub_key] = dict()
+                    self._create_widget_description(curr_class, curr_dict)
+                    getattr(self, f'_create_widget_{curr_dict["type"]}')(curr_class, sub_key, curr_dict)
 
         self.main_frame.rowconfigure(self.row_index, weight=1)
         if self.app.arg('verbose'):
             print(f'{" " * 5}> row {self.row_index}: vertically centered.')
             print(f'{"*" * 43}\nFINISH: Creating nested MenuConfig widgets\n{"*" * 43}\n\n')
 
-    def _create_titlebar(self):
+    def _create_titlebar(self, row_index):
         if self.app.arg('verbose'):
-            print(f'{" " * 3}- row 0: TitleBar allows click+drag to move MenuConfig')
+            print(f'{" " * 3}- row {row_index}: TitleBar allows click+drag to move MenuConfig')
         self.titlebar = Titlebar(master=self)
-        self.titlebar.grid(row=0, column=0, sticky=W + N + E)  # .pack(fill=X, expand=True)
+        self.titlebar.grid(row=row_index, column=0, sticky=W + N + E)  # .pack(fill=X, expand=True)
         # self.titlebar.update_idletasks()
 
-    def _create_main_frame(self):
+    def _create_tab_bar(self, row_index):
         if self.app.arg('verbose'):
-            print(f'{" " * 3}- row 1: Frame contains configuration modifier widgets')
+            print(f'{" " * 3}- row {row_index}: TabBar contains all tabs in Notebook')
+        self.tab_bar = TabBar(self)
+        self.tab_bar.grid(row=row_index, column=0, sticky=W + N + E)  # .pack(fill=X, expand=True)
+
+    def _create_main_frame(self, row_index):
+        if self.app.arg('verbose'):
+            print(f'{" " * 3}- row {row_index}: Frame contains configuration modifier widgets')
         self.main_frame = Frame(master=self, bg=self.app.config('color', 'inner', w=self.__class__))
-        self.main_frame.grid(row=1, column=0, sticky='wnes')
+        self.main_frame.grid(row=row_index, column=0, sticky=W + N + S + E)
         self.main_frame.columnconfigure(0, weight=1)
 
     def _create_variable_type(self, curr_class, sub_key, curr_dict):
@@ -201,7 +139,8 @@ class MenuConfig(Toplevel):
                                                   from_=curr_dict['from'], to=curr_dict['to'],
                                                   resolution=curr_dict['resolution'],
                                                   variable=self.variables[curr_class][sub_key],
-                                                  command=getattr(self.app.widget(curr_class.__name__), f'adjust_{sub_key}'))
+                                                  command=getattr(self.app.widget(curr_class.__name__),
+                                                                  f'adjust_{sub_key}'))
         self.widgets[curr_class]['scale'].pack(side=LEFT, fill=X, expand=True)
         if self.app.arg('verbose'):
             print(f'{" " * 7}- column 1: Scale widget {curr_class.__name__}[\'{sub_key}\']')
@@ -275,6 +214,14 @@ class MenuConfig(Toplevel):
 
         self.main_frame.configure(width=self.main_frame.winfo_reqwidth())
 
+    def _create_widget_text(self, curr_class, sub_key, curr_dict):
+        pass
+        # print(curr_class, sub_key, curr_dict)
+
+    def _create_widget_dropdown(self, curr_class, sub_key, curr_dict):
+        pass
+        # print(curr_class, sub_key, curr_dict)
+
     def get_titlebar_wh(self):
         self.titlebar.update_idletasks()
         return self.titlebar.winfo_width(), self.titlebar.winfo_height()
@@ -299,23 +246,28 @@ class MenuConfig(Toplevel):
     #     self.destroy_()
 
     def destroy_(self):
-        if self.app.arg('verbose') > 1:
-            print(f'{" " * 1}> Destroying MenuConfig.widgets')
-        self.grab_release()
-        for curr_class, curr_class_dict in self.widgets_create_dict.items():
-            for sub_key, curr_dict in curr_class_dict.items():
-                # if curr_dict['type'] == 'scale':
-                try:
-                    curr_var = self.variables[curr_class][sub_key]
+        if self.app.arg('verbose'):
+            print(f'{" " * 1}> Destroying MenuConfig')
+        # self.grab_release()
+
+        for curr_tab in self.tab_create_list:
+            for curr_class, curr_class_dict in curr_tab['data'].items():
+                for sub_key, curr_dict in curr_class_dict.items():
+                    # if curr_dict['type'] == 'scale':
                     try:
-                        curr_var.trace_vdelete('w', curr_var.trace_id)
-                    except TclError as err:
-                        print(f'{"@" * 3}- Could not trace_vdelete {curr_var}.\n'
-                              f'{"@" * 3}  No trace_id: {err}.')
-                except KeyError as err:
-                    if self.app.arg('verbose') > 2:
-                        print(err)
+                        curr_var = self.variables[curr_class][sub_key]
+                        try:
+                            curr_var.trace_vdelete('w', curr_var.trace_id)
+                        except TclError as err:
+                            print(f'{"@" * 3}- Could not trace_vdelete {curr_var}.\n'
+                                  f'{"@" * 3}  No trace_id: {err}.')
+                    except KeyError as err:
+                        if self.app.arg('verbose') > 2:
+                            print(err)
+
         for widget in self.winfo_children():
+            if self.app.arg('verbose') > 1:
+                print(f'{" " * 3}- forgetting and destroying {widget}')
             widget.forget()
             widget.destroy()
 

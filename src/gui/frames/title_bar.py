@@ -1,6 +1,6 @@
 from tkinter import *
 
-from src.gui.frames.windowmanager import WindowManager
+from src.gui.frames.window_manager import WindowManager
 
 
 class Titlebar(Frame):
